@@ -1,0 +1,125 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:h="http://xmlns.jcp.org/jsf/html"
+	xmlns:f="http://xmlns.jcp.org/jsf/core"
+	xmlns:ui="http://xmlns.jcp.org/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui" template="/template/layout.xhtml">
+
+	<ui:define name="content">
+	<p:spacer height="10px;" />
+		<h:form>
+			<div class="ui-fluid">
+				<div class="aw-content">
+					<p:panelGrid columns="2"
+						columnClasses="ui-grid-col-5,ui-grid-col-3" layout="grid"
+						styleClass="ui-panelgrid-blank">
+						<p:inputText id="pesquisar" placeholder="TÍTULO"
+							value="#{taskBean.filter}" />
+						<p:commandButton value="PESQUISAR" action="#{taskBean.buscar()}" update="formTbl:tbl"/>
+					</p:panelGrid>
+				</div>
+			</div>
+		</h:form>		
+		<div class="ui-fluid">
+			<h:form id="formTbl">
+				<p:panelGrid columns="1" columnClasses="ui-grid-col-2" layout="grid"
+					styleClass="ui-panelgrid-blank">
+					<p:commandButton value="NOVA TAREFA" onclick="PF('dlg').show();"
+						action="#{taskBean.novo()}" update="cad " />
+				</p:panelGrid>				
+				<p:panelGrid columns="1" columnClasses="ui-grid-col-12" layout="grid"
+					styleClass="ui-panelgrid-blank">
+					<p:messages id="globalGrowl" showDetail="true" autoUpdate="true"
+				 closable="true" />
+				</p:panelGrid>				
+				<p:panelGrid columns="1" columnClasses="ui-grid-col-12"
+					layout="grid" styleClass="ui-panelgrid-blank">
+					<p:dataTable id="tbl" emptyMessage="TAREFA NÃO ENCONTRADA"
+						value="#{taskBean.listaTarefa}" var="list" rows="10" 
+						styleClass="table"
+						paginator="true" paginatorPosition="bottom" reflow="true"
+						paginatorTemplate="{PreviousPageLink} {PageLinks} {NextPageLink}">
+						<f:facet name="header">
+                               LISTAGEM DE TAREFAS
+                               </f:facet>
+						<p:columnGroup type="header" >
+							<p:column style="width: 20%;" headerText="TÍTULO" />
+							<p:column style="width: 40%;" headerText="DESCRIÇÃO" />
+							<p:column style="width: 10%;" headerText="DATA CAD" />
+							<p:column style="width: 10%;" headerText="ULTIMA ATU" />
+							<p:column style="width: 10%;" headerText="STATUS" />
+							<p:column style="width: 5%;" headerText="" />
+							<p:column style="width: 5%;" headerText="" />
+						</p:columnGroup>
+						<p:column>
+							<h:outputText value="#{list.titulo}" />
+						</p:column>
+						<p:column>
+							<h:outputText value="#{list.descricao}" >							
+							</h:outputText>
+						</p:column>
+						<p:column>
+							<h:outputText value="#{list.dataCadastro}" >
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+						<p:column>
+							<h:outputText value="#{list.dataEdicao}" >
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+							</h:outputText>
+						</p:column>
+						<p:column>							
+							<p:commandLink onstart="PF('statusDialog').show()" onsuccess="PF('statusDialog').hide()" update="tbl formTbl:globalGrowl" action="#{taskBean.updateStatus(list)}">                                           
+                            <h:panelGroup rendered="#{!list.status}">
+                              <i class="fa fa-check fa-2x desativado" title="Não Conluído" aria-hidden="true"></i>
+                            </h:panelGroup>
+                            <h:panelGroup rendered="#{list.status}">
+                             <i  class="fa fa-check fa-2x ativo" title="Conluído" aria-hidden="true"></i>
+                            </h:panelGroup>                                                    
+                            </p:commandLink>
+						</p:column>
+						<p:column>
+					     <p:commandLink  onclick="PF('dlg').show();" update="formTbl:cad" >
+                          <i class="fa fa-edit fa-2x ativo" title="Editar" aria-hidden="true"></i>
+                         <f:setPropertyActionListener target="#{taskBean.tarefa}" value="#{list}"/>                                           
+                         </p:commandLink> 
+						</p:column>
+						<p:column>
+						<p:commandLink action="#{taskBean.excluir(list)}"  update="tbl formTbl:globalGrowl" >
+                          <i class="fa fa-trash fa-2x ativo" title="Excluir Tarefa" aria-hidden="true"></i>                                                    
+                          <p:confirm header="Excluir Tarefa" message="Deseja excluir tarefa?"/>                                         
+                         </p:commandLink>
+                         <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" styleClass="textoLabel">                                
+                                <p:commandButton value="Sim" type="button" styleClass="ui-confirmdialog-yes textoLabel testando" icon="ui-icon-check" />
+                                <p:commandButton value="Não" type="button" styleClass="ui-confirmdialog-no textoLabel testando" icon="ui-icon-close" />
+                            </p:confirmDialog>						
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+				<p:dialog widgetVar="statusDialog" modal="true" draggable="false"
+					closable="false" resizable="false" showHeader="false">
+					<p:graphicImage library="images" name="logando.gif" width="80px" />
+				</p:dialog>
+				<p:dialog header="CADASTRO DE TAREFA" widgetVar="dlg" modal="true"
+					resizable="false" responsive="true" styleClass="edicao">
+					<p:panelGrid id="cad" columns="1" layout="grid"
+						styleClass="ui-panelgrid-blank" columnClasses="ui-grid-col-12">
+						<p:inputText placeholder="TÍTULO"
+							value="#{taskBean.tarefa.titulo}" />
+						<p:inputTextarea rows="10" placeholder="DESCRIÇÃO"
+							value="#{taskBean.tarefa.descricao}" />
+					</p:panelGrid>
+					<p:panelGrid columns="2"
+						columnClasses="ui-grid-col-2,ui-grid-col-2" layout="grid"
+						styleClass="ui-panelgrid-blank" style="margin-top: 20px;">
+						<p:commandButton value="SALVAR" onclick="PF('dlg').hide()"
+							action="#{taskBean.salvar()}" update="tbl formTbl:globalGrowl" onstart="PF('statusDialog').show()"
+							onsuccess="PF('statusDialog').hide()" />
+						<p:commandButton value="CANCELAR" type="button"
+							onclick="PF('dlg').hide()" />
+					</p:panelGrid>
+				</p:dialog>
+			</h:form>
+		</div>
+	</ui:define>
+
+</ui:composition>
